@@ -45,9 +45,6 @@
 	      <div class="panel panel-default">
 	        <div class="panel-heading">
 	          <div class="day-buttons">
-	            <button class="btn btn-circle day-btn">1</button>
-	            <button class="btn btn-circle day-btn current-day">2</button>
-	            <button class="btn btn-circle day-btn">3</button>
 	            <button class="btn btn-circle day-btn" id="day-add">+</button>
 	          </div>
 	        </div>
@@ -83,6 +80,7 @@
   var hotels = {{ hotels | dump | safe }};
   var restaurants = {{ restaurants | dump | safe }};
 	var activities = {{ activities | dump | safe }};
+  var DayData = {};
 	// add hotels to drop down
 	hotels.forEach(function(hotel) {
 		$('#hotel-choices').append('<option>'+hotel.name+'</option>')
@@ -98,21 +96,84 @@
 		$('#activity-choices').append('<option>'+activity.name+'</option>')
 	})
 
+  //add a day
+  var day = 0
+  $('#day-add').on('click', function(){
+    day++
+    $('<button class="btn btn-circle day-btn">'+day+'</button>').insertBefore($('#day-add'))
+    DayData.day = {}
+  })
+
 	// add items to itinerary
 	$('#add-hotel').click(function() {
-		var $hotel = $('#hotel-choices').find(':selected').text();
-		$('#hotel-list').append('<span class="title">'+$hotel+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button>');
+    if ($('#hotel-list').children()) {
+      $('#hotel-list').children().remove()
+    }
+		var hotel = $('#hotel-choices').find(':selected').text();
+		$('#hotel-list').append('<span class="title">'+hotel+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button>');
+    var hotelDetails = hotels.filter(obj => obj.name == hotel)
+    var location = {lat: hotelDetails[0].place.location[0], lng: hotelDetails[0].place.location[1]}
+    initMap(location)
+    DayData.day.hotel = hotel
 	})
 
 	$('#add-restaurant').click(function() {
-		var $restaurant = $('#restaurant-choices').find(':selected').text();
-		$('#restaurant-list').append('<span class="title">'+$restaurant+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button>');
+		var restaurant = $('#restaurant-choices').find(':selected').text();
+		$('#restaurant-list').append('<span class="title">'+restaurant+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button>');
+    var restoDetails = restaurants.filter(obj => obj.name == restaurant)
+    var location = {lat: restoDetails[0].place.location[0], lng: restoDetails[0].place.location[1]}
+    initMap(location)
+    if (!DayData.day.restaurant) {
+      DayData.day.restaurant = []
+      DayData.day.restaurant.push(restaurant)
+    } else {
+      DayData.day.restaurant.push(restaurant)
+    }
 	})
 
 	$('#add-activity').click(function() {
-		var $activity = $('#activity-choices').find(':selected').text();
-		$('#activity-list').append('<span class="title">'+$activity+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button>');
+		var activity = $('#activity-choices').find(':selected').text();
+		$('#activity-list').append('<span class="title">'+activity+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button>');
+    var activityDetails = activities.filter(obj => obj.name == activity)
+    var location = {lat: activityDetails[0].place.location[0], lng: activityDetails[0].place.location[1]}
+    initMap(location)
+    if (!DayData.day.activity) {
+      DayData.day.activity = []
+      DayData.day.activity.push(activity)
+    } else {
+      DayData.day.activity.push(activity)
+    }
 	})
+
+  //remove itinerary
+  $('#itinerary').on('click', '.remove', function () {
+    $(this).siblings().remove()
+    $(this).remove()
+  });
+
+
+
+  function initMap(location) {
+    var map = new google.maps.Map(document.getElementById('map-canvas'), {
+      zoom: 15,
+      center: {lat: location.lat, lng: location.lng}
+    });
+
+    var goldStar = {
+      path: 'M 125,5 155,90 245,90 175,145 200,230 125,180 50,230 75,145 5,90 95,90 z',
+      fillColor: 'yellow',
+      fillOpacity: 0.8,
+      scale: 0.1,
+      strokeColor: 'gold',
+      strokeWeight: 5
+    };
+
+    var marker = new google.maps.Marker({
+      position: map.getCenter(),
+      icon: goldStar,
+      map: map
+    });
+  }
 
 </script>
 

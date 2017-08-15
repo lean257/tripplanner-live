@@ -4,12 +4,13 @@ const db = require('../models')
 const Restaurant = db.models.restaurant
 const Activity = db.models.activity
 const Hotel = db.models.hotel
+const Place = db.models.place
 
 router.get('/', function(req, res, next){
 
-	const findingHotels = Hotel.findAll()
-	const findingRestaurants = Restaurant.findAll()
-	const findingActivities = Activity.findAll()
+	const findingHotels = Hotel.findAll({include: [Place]})
+	const findingRestaurants = Restaurant.findAll({include: [Place]})
+	const findingActivities = Activity.findAll({include: [Place]})
 
 	Promise.all([findingHotels, findingActivities, findingRestaurants])
 		.then(function(arr){
