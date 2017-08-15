@@ -100,9 +100,51 @@
   var day = 0
   $('#day-add').on('click', function(){
     day++
-    $('<button class="btn btn-circle day-btn">'+day+'</button>').insertBefore($('#day-add'))
-    DayData.day = {}
-  })
+    $('<button class="btn btn-circle day-btn created-day" id='+day+'>'+day+'</button>').insertBefore($('#day-add'))
+    DayData[day] = {}
+	})
+
+	// when click on a day button...
+	$('.day-buttons').on('click', '.created-day', function() {
+		var selectedDay = $(this).attr('id');
+		//console.log("im here");
+		removeItinerary();
+		//console.log('here are you daydata objects', DayData, DayData[selectedDay]);
+		if (DayData[selectedDay].hasOwnProperty('hotel')) setHotel(DayData[selectedDay].hotel);
+		if (DayData[selectedDay].hasOwnProperty('restaurant')) setRestaurant(DayData[selectedDay].restaurant);
+		if (DayData[selectedDay].hasOwnProperty('activity')) setActivity(DayData[selectedDay].activity);
+		//console.log(DayData)
+	})
+
+	// setHotel function
+	function setHotel(hotel) {
+		$('#hotel-list').append('<span class="title" value="hotel">'+hotel+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button>');
+		var hotelDetails = hotels.filter(obj => obj.name == hotel)
+    var location = {lat: hotelDetails[0].place.location[0], lng: hotelDetails[0].place.location[1]}
+    initMap(location)
+	}
+
+	// set activities function
+	function setActivity(activity) {
+		$('#activity-list').append('<span class="title" value="activity">'+activity+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button>');
+    var activityDetails = activities.filter(obj => obj.name == activity)
+    var location = {lat: activityDetails[0].place.location[0], lng: activityDetails[0].place.location[1]}
+    initMap(location)
+	}
+
+	// set restaurant function
+	function setRestaurant(restaurant) {
+		$('#restaurant-list').append('<span class="title" value="restaurant">'+restaurant+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button>');
+    var restoDetails = restaurants.filter(obj => obj.name == restaurant)
+    var location = {lat: restoDetails[0].place.location[0], lng: restoDetails[0].place.location[1]}
+    initMap(location)
+	}
+
+	// remove full itinerary (to be used when switching days)
+	function removeItinerary() {
+		$('#itinerary .title').remove()
+		$('#itinerary .remove').remove()
+	}
 
 	// add items to itinerary
 	$('#add-hotel').click(function() {
@@ -110,49 +152,52 @@
       $('#hotel-list').children().remove()
     }
 		var hotel = $('#hotel-choices').find(':selected').text();
-		$('#hotel-list').append('<span class="title">'+hotel+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button>');
-    var hotelDetails = hotels.filter(obj => obj.name == hotel)
-    var location = {lat: hotelDetails[0].place.location[0], lng: hotelDetails[0].place.location[1]}
-    initMap(location)
-    DayData.day.hotel = hotel
+		//console.log(hotel);
+		setHotel(hotel);
+		if (!DayData[day].hotel) {
+      DayData[day].hotel = []
+      DayData[day].hotel.push(hotel)
+    } else {
+      DayData[day].hotel.push(hotel)
+    }
 	})
 
 	$('#add-restaurant').click(function() {
 		var restaurant = $('#restaurant-choices').find(':selected').text();
-		$('#restaurant-list').append('<span class="title">'+restaurant+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button>');
-    var restoDetails = restaurants.filter(obj => obj.name == restaurant)
-    var location = {lat: restoDetails[0].place.location[0], lng: restoDetails[0].place.location[1]}
-    initMap(location)
-    if (!DayData.day.restaurant) {
-      DayData.day.restaurant = []
-      DayData.day.restaurant.push(restaurant)
+		setRestaurant(restaurant);
+    if (!DayData[day].restaurant) {
+      DayData[day].restaurant = []
+      DayData[day].restaurant.push(restaurant)
     } else {
-      DayData.day.restaurant.push(restaurant)
+      DayData[day].restaurant.push(restaurant)
     }
 	})
 
 	$('#add-activity').click(function() {
 		var activity = $('#activity-choices').find(':selected').text();
-		$('#activity-list').append('<span class="title">'+activity+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button>');
-    var activityDetails = activities.filter(obj => obj.name == activity)
-    var location = {lat: activityDetails[0].place.location[0], lng: activityDetails[0].place.location[1]}
-    initMap(location)
-    if (!DayData.day.activity) {
-      DayData.day.activity = []
-      DayData.day.activity.push(activity)
+		setActivity(activity);
+    if (!DayData[day].activity) {
+      DayData[day].activity = []
+      DayData[day].activity.push(activity)
     } else {
-      DayData.day.activity.push(activity)
+      DayData[day].activity.push(activity)
     }
 	})
 
-  //bind itinerary to day
-
-  //remove itinerary
+  //remove an item from itinerary
   $('#itinerary').on('click', '.remove', function () {
+		let itemName = $(this).siblings().html();
+		console.log('siblings',$(this).siblings());
+		let itemType = $(this).siblings().attr('value');
     $(this).siblings().remove()
-    $(this).remove()
-  });
-
+		$(this).remove()
+		// console.log('inside remove, daydata = ',DayData, DayData[day]);
+		// console.log('itemtype is', itemType);
+		// console.log('itemname is', itemName);
+		// DayData[day][itemType] = DayData[day][itemType].filter(function(name) {
+		// 	return name != itemName;
+		// })
+	});
 
 
   function initMap(location) {
