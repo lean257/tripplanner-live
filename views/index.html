@@ -38,8 +38,8 @@
 	    <div class="col-xs-6 col-sm-12">
 	      <h3>
 	        <span id="day-title">
-	          <span>Day</span>
-	          <button class="btn btn-xs btn-danger remove btn-circle">x</button>
+	          <span>Day </span>
+	          <button class="btn btn-xs btn-danger remove btn-circle" id="deleted-day">x</button>
 	        </span>
 	      </h3>
 	      <div class="panel panel-default">
@@ -98,6 +98,7 @@
 
   //add a day
   var day = 0
+  var currDay = 0
   $('#day-add').on('click', function(){
     day++
     $('<button class="btn btn-circle day-btn created-day" id='+day+'>'+day+'</button>').insertBefore($('#day-add'))
@@ -106,38 +107,47 @@
 
 	// when click on a day button...
 	$('.day-buttons').on('click', '.created-day', function() {
-		var selectedDay = $(this).attr('id');
+		var selectedDay = $(this).attr('id')
+    currDay = selectedDay
 		//console.log("im here");
 		removeItinerary();
 		//console.log('here are you daydata objects', DayData, DayData[selectedDay]);
 		if (DayData[selectedDay].hasOwnProperty('hotel')) setHotel(DayData[selectedDay].hotel);
 		if (DayData[selectedDay].hasOwnProperty('restaurant')) setRestaurant(DayData[selectedDay].restaurant);
 		if (DayData[selectedDay].hasOwnProperty('activity')) setActivity(DayData[selectedDay].activity);
-		//console.log(DayData)
+    $('#day-title span').remove()
+    $('#day-title #deleted-day').remove()
+		$('#day-title').append('<span>Day ' + day + '</span><button class="btn btn-xs btn-danger remove btn-circle" id="deleted-day">x</button>')
 	})
 
 	// setHotel function
 	function setHotel(hotel) {
-		$('#hotel-list').append('<span class="title" value="hotel">'+hotel+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button>');
-		var hotelDetails = hotels.filter(obj => obj.name == hotel)
-    var location = {lat: hotelDetails[0].place.location[0], lng: hotelDetails[0].place.location[1]}
-    initMap(location)
+    hotel.forEach(hotel => {
+      $('#hotel-list').append('<div><span class="title" value="hotel">'+hotel+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button></div>');
+      var hotelDetails = hotels.filter(obj => obj.name == hotel)
+      var location = {lat: hotelDetails[0].place.location[0], lng: hotelDetails[0].place.location[1]}
+      initMap(location)
+    })
 	}
 
 	// set activities function
 	function setActivity(activity) {
-		$('#activity-list').append('<span class="title" value="activity">'+activity+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button>');
-    var activityDetails = activities.filter(obj => obj.name == activity)
-    var location = {lat: activityDetails[0].place.location[0], lng: activityDetails[0].place.location[1]}
-    initMap(location)
+    activity.forEach(activity => {
+      $('#activity-list').append('<div><span class="title" value="activity">'+activity+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button></div>');
+      var activityDetails = activities.filter(obj => obj.name == activity)
+      var location = {lat: activityDetails[0].place.location[0], lng: activityDetails[0].place.location[1]}
+      initMap(location)
+    })
 	}
 
 	// set restaurant function
 	function setRestaurant(restaurant) {
-		$('#restaurant-list').append('<span class="title" value="restaurant">'+restaurant+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button>');
-    var restoDetails = restaurants.filter(obj => obj.name == restaurant)
-    var location = {lat: restoDetails[0].place.location[0], lng: restoDetails[0].place.location[1]}
-    initMap(location)
+    restaurant.forEach(restaurant => {
+      $('#restaurant-list').append('<div><span class="title" value="restaurant">'+restaurant+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button></div>');
+      var restoDetails = restaurants.filter(obj => obj.name == restaurant)
+      var location = {lat: restoDetails[0].place.location[0], lng: restoDetails[0].place.location[1]}
+      initMap(location)
+    })
 	}
 
 	// remove full itinerary (to be used when switching days)
@@ -152,51 +162,62 @@
       $('#hotel-list').children().remove()
     }
 		var hotel = $('#hotel-choices').find(':selected').text();
-		//console.log(hotel);
-		setHotel(hotel);
-		if (!DayData[day].hotel) {
-      DayData[day].hotel = []
-      DayData[day].hotel.push(hotel)
+    $('#hotel-list').append('<div><span class="title" value="hotel">'+hotel+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button></div>');
+    var hotelDetails = hotels.filter(obj => obj.name == hotel)
+    var location = {lat: hotelDetails[0].place.location[0], lng: hotelDetails[0].place.location[1]}
+    initMap(location)
+		if (!DayData[currDay].hotel) {
+      DayData[currDay].hotel = []
+      DayData[currDay].hotel.push(hotel)
     } else {
-      DayData[day].hotel.push(hotel)
+      DayData[currDay].hotel.push(hotel)
     }
 	})
 
 	$('#add-restaurant').click(function() {
 		var restaurant = $('#restaurant-choices').find(':selected').text();
-		setRestaurant(restaurant);
-    if (!DayData[day].restaurant) {
-      DayData[day].restaurant = []
-      DayData[day].restaurant.push(restaurant)
+    if (!DayData[currDay].restaurant) {
+      DayData[currDay].restaurant = []
+      DayData[currDay].restaurant.push(restaurant)
     } else {
-      DayData[day].restaurant.push(restaurant)
+      DayData[currDay].restaurant.push(restaurant)
     }
+    $('#restaurant-list').append('<div><span class="title" value="restaurant">'+restaurant+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button></div>');
+    var restoDetails = restaurants.filter(obj => obj.name == restaurant)
+    var location = {lat: restoDetails[0].place.location[0], lng: restoDetails[0].place.location[1]}
+    initMap(location)
 	})
 
 	$('#add-activity').click(function() {
 		var activity = $('#activity-choices').find(':selected').text();
-		setActivity(activity);
-    if (!DayData[day].activity) {
-      DayData[day].activity = []
-      DayData[day].activity.push(activity)
+    if (!DayData[currDay].activity) {
+      DayData[currDay].activity = []
+      DayData[currDay].activity.push(activity)
     } else {
-      DayData[day].activity.push(activity)
+      DayData[currDay].activity.push(activity)
     }
+    $('#activity-list').append('<div><span class="title" value="activity">'+activity+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button></div>');
+    var activityDetails = activities.filter(obj => obj.name == activity)
+    var location = {lat: activityDetails[0].place.location[0], lng: activityDetails[0].place.location[1]}
+    initMap(location)
 	})
 
   //remove an item from itinerary
   $('#itinerary').on('click', '.remove', function () {
 		let itemName = $(this).siblings().html();
-		console.log('siblings',$(this).siblings());
+		// console.log('siblings',$(this).siblings());
 		let itemType = $(this).siblings().attr('value');
+    console.log('siblings inside remove', $(this).siblings());
+    //if we don't have a div, this removes all siblings
     $(this).siblings().remove()
 		$(this).remove()
-		// console.log('inside remove, daydata = ',DayData, DayData[day]);
 		// console.log('itemtype is', itemType);
-		// console.log('itemname is', itemName);
-		// DayData[day][itemType] = DayData[day][itemType].filter(function(name) {
-		// 	return name != itemName;
-		// })
+
+		DayData[currDay][itemType] = DayData[currDay][itemType].filter(function(name) {
+      console.log('name', name, 'itemName', itemName)
+			return name != itemName;
+		})
+    console.log('daydata item', DayData[currDay][itemType]);
 	});
 
 
