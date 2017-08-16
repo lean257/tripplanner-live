@@ -81,6 +81,7 @@
   var restaurants = {{ restaurants | dump | safe }};
 	var activities = {{ activities | dump | safe }};
   var DayData = {};
+  var MarkerObj = {};
 	// add hotels to drop down
 	hotels.forEach(function(hotel) {
 		$('#hotel-choices').append('<option>'+hotel.name+'</option>')
@@ -102,16 +103,39 @@
   $('#day-add').on('click', function(){
     day++
     $('<button class="btn btn-circle day-btn created-day" id='+day+'>'+day+'</button>').insertBefore($('#day-add'))
-    DayData[day] = {}
+    //Todo: need to get rid of all the if stmt
+    DayData[day] = {hotel: [], restaurant: [], activity: []}
+    MarkerObj[day] = {hotel: [], restaurant: [], activity: []}
+    console.log('currDay', currDay)
+    if (currDay > 0) removeMarker(currDay)
 	})
 
-	// when click on a day button...
+  //remove a day
+  $('#deleted-day')
+  //remove marker
+  function removeMarker(currDay) {
+    for (var i = 0; i < MarkerObj[currDay].hotel.length; i++) {
+      MarkerObj[currDay].hotel[i].setMap(null)
+    }
+    for (var i = 0; i < MarkerObj[currDay].restaurant.length; i++) {
+      MarkerObj[currDay].restaurant[i].setMap(null)
+    }
+    for (var i = 0; i < MarkerObj[currDay].activity.length; i++) {
+      MarkerObj[currDay].activity[i].setMap(null)
+    }
+    var map = new google.maps.Map(document.getElementById('map-canvas'), {
+      zoom: 15,
+      center: {lat: 40.7831, lng: -73.9712}
+    });
+  }
+	// when click on a day button to load all data
 	$('.day-buttons').on('click', '.created-day', function() {
 		var selectedDay = $(this).attr('id')
+
+    //change to the new clicked day
     currDay = selectedDay
-		//console.log("im here");
-		removeItinerary();
-		//console.log('here are you daydata objects', DayData, DayData[selectedDay]);
+    removeItinerary();
+
 		if (DayData[selectedDay].hasOwnProperty('hotel')) setHotel(DayData[selectedDay].hotel);
 		if (DayData[selectedDay].hasOwnProperty('restaurant')) setRestaurant(DayData[selectedDay].restaurant);
 		if (DayData[selectedDay].hasOwnProperty('activity')) setActivity(DayData[selectedDay].activity);
@@ -126,7 +150,7 @@
       $('#hotel-list').append('<div><span class="title" value="hotel">'+hotel+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button></div>');
       var hotelDetails = hotels.filter(obj => obj.name == hotel)
       var location = {lat: hotelDetails[0].place.location[0], lng: hotelDetails[0].place.location[1]}
-      initMap(location)
+      initMap(location, 'hotel')
     })
 	}
 
@@ -136,7 +160,7 @@
       $('#activity-list').append('<div><span class="title" value="activity">'+activity+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button></div>');
       var activityDetails = activities.filter(obj => obj.name == activity)
       var location = {lat: activityDetails[0].place.location[0], lng: activityDetails[0].place.location[1]}
-      initMap(location)
+      initMap(location, 'activity')
     })
 	}
 
@@ -146,7 +170,7 @@
       $('#restaurant-list').append('<div><span class="title" value="restaurant">'+restaurant+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button></div>');
       var restoDetails = restaurants.filter(obj => obj.name == restaurant)
       var location = {lat: restoDetails[0].place.location[0], lng: restoDetails[0].place.location[1]}
-      initMap(location)
+      initMap(location, 'restaurant')
     })
 	}
 
@@ -160,18 +184,20 @@
 	$('#add-hotel').click(function() {
     if ($('#hotel-list').children()) {
       $('#hotel-list').children().remove()
+      MarkerObj[currDay].hotel = []
     }
 		var hotel = $('#hotel-choices').find(':selected').text();
     $('#hotel-list').append('<div><span class="title" value="hotel">'+hotel+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button></div>');
     var hotelDetails = hotels.filter(obj => obj.name == hotel)
     var location = {lat: hotelDetails[0].place.location[0], lng: hotelDetails[0].place.location[1]}
-    initMap(location)
+    initMap(location, 'hotel')
 		if (!DayData[currDay].hotel) {
       DayData[currDay].hotel = []
       DayData[currDay].hotel.push(hotel)
     } else {
       DayData[currDay].hotel.push(hotel)
     }
+    // console.log('DayData', DayData[currDay])
 	})
 
 	$('#add-restaurant').click(function() {
@@ -185,7 +211,7 @@
     $('#restaurant-list').append('<div><span class="title" value="restaurant">'+restaurant+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button></div>');
     var restoDetails = restaurants.filter(obj => obj.name == restaurant)
     var location = {lat: restoDetails[0].place.location[0], lng: restoDetails[0].place.location[1]}
-    initMap(location)
+    initMap(location, 'restaurant')
 	})
 
 	$('#add-activity').click(function() {
@@ -196,10 +222,11 @@
     } else {
       DayData[currDay].activity.push(activity)
     }
+
     $('#activity-list').append('<div><span class="title" value="activity">'+activity+'</span><button class="btn btn-xs btn-danger remove btn-circle">x</button></div>');
     var activityDetails = activities.filter(obj => obj.name == activity)
     var location = {lat: activityDetails[0].place.location[0], lng: activityDetails[0].place.location[1]}
-    initMap(location)
+    initMap(location, 'activity')
 	})
 
   //remove an item from itinerary
@@ -221,7 +248,7 @@
 	});
 
 
-  function initMap(location) {
+  function initMap(location, itemType) {
     var map = new google.maps.Map(document.getElementById('map-canvas'), {
       zoom: 15,
       center: {lat: location.lat, lng: location.lng}
@@ -237,10 +264,25 @@
     };
 
     var marker = new google.maps.Marker({
-      position: map.getCenter(),
-      icon: goldStar,
-      map: map
+     position: map.getCenter(),
+     icon: goldStar,
+     map: map
     });
+
+    //store arrays of markers
+    // console.log('itemType')
+    MarkerObj[currDay][itemType].push(marker)
+
+    for (var i = 0; i < MarkerObj[currDay].hotel.length; i++) {
+      MarkerObj[currDay].hotel[i].setMap(map)
+    }
+    for (var i = 0; i < MarkerObj[currDay].restaurant.length; i++) {
+      MarkerObj[currDay].restaurant[i].setMap(map)
+    }
+    for (var i = 0; i < MarkerObj[currDay].activity.length; i++) {
+      MarkerObj[currDay].activity[i].setMap(map)
+    }
+    console.log('marker', marker)
   }
 
 </script>
