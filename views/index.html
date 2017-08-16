@@ -111,7 +111,37 @@
 	})
 
   //remove a day
-  $('#deleted-day')
+  $('#day-title').on('click', '#deleted-day', function() {
+    // remove the latest day button
+
+    removeItinerary();
+
+    // update DayData to shift the days
+    DayData[currDay] = {hotel: [], restaurant: [], activity: []}
+
+    console.log(DayData[currDay+1]);
+    if (DayData[parseInt(currDay)+1]) {
+
+      DayData[currDay] = DayData[parseInt(currDay)+1]
+      delete DayData[parseInt(currDay)+1]
+      console.log('DayData', DayData);
+      console.log('DayData[currDay]', DayData[currDay]);
+      setHotel(DayData[currDay].hotel)
+      setRestaurant(DayData[currDay].restaurant)
+      setActivity(DayData[currDay].activity)
+    }
+
+    // update MarkerObj to shift the days
+    MarkerObj[currDay] = {hotel: [], restaurant: [], activity: []}
+    if (MarkerObj[parseInt(currDay)+1]) {
+      MarkerObj[currDay] = MarkerObj[parseInt(currDay)+1]
+      delete MarkerObj[parseInt(currDay)+1]
+    }
+
+    $(document.getElementById(day)).remove();
+    day--;
+  })
+
   //remove marker
   function removeMarker(currDay) {
     for (var i = 0; i < MarkerObj[currDay].hotel.length; i++) {
@@ -141,7 +171,7 @@
 		if (DayData[selectedDay].hasOwnProperty('activity')) setActivity(DayData[selectedDay].activity);
     $('#day-title span').remove()
     $('#day-title #deleted-day').remove()
-		$('#day-title').append('<span>Day ' + day + '</span><button class="btn btn-xs btn-danger remove btn-circle" id="deleted-day">x</button>')
+		$('#day-title').append('<span>Day ' + selectedDay + '</span><button class="btn btn-xs btn-danger remove btn-circle" id="deleted-day">x</button>')
 	})
 
 	// setHotel function
